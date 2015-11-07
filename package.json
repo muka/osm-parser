@@ -1,0 +1,15 @@
+{
+  "name": "osm-parser",
+  "version": "1.0.0",
+  "description": "OSM Xml parser",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Luca Capra <luca.capra@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^2.0.48",
+    "node-expat": "^2.3.11"
+  }
+}
