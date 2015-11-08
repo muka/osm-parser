@@ -1,11 +1,11 @@
 {
   "name": "osm-parser",
   "version": "1.0.0",
-  "description": "OSM Xml parser",
+  "description": "Node.js based OpenStreetMap XML parser",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "tags": [ "osm", "open street map", "xml", "parser", "importer" "mongodb" ],
+  "repository": "github:muka/osm-parser",
+  "scripts": {},
   "author": "Luca Capra <luca.capra@gmail.com>",
   "license": "MIT",
   "dependencies": {
