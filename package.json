@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Node.js based OpenStreetMap XML parser",
   "main": "index.js",
-  "tags": [ "osm", "open street map", "xml", "parser", "importer" "mongodb" ],
+  "tags": [ "osm", "open street map", "xml", "parser", "importer", "mongodb" ],
   "repository": "github:muka/osm-parser",
   "scripts": {},
   "author": "Luca Capra <luca.capra@gmail.com>",

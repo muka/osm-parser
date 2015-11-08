@@ -4,7 +4,7 @@ var Promise = require('bluebird')
 var logger = require('../lib/logger').getLogger('driver.mongodb')
 
 var dbconfig
-
+var connected = false
 var db
 lib.connect = function(dbconf) {
   dbconfig = dbconf
@@ -18,11 +18,12 @@ lib.connect = function(dbconf) {
     MongoClient.connect(url, function(err, dbconn) {
       if(err) return reject(err)
       db = dbconn
-      logger.silly("connected")      
+      logger.silly("connected")
       if(dbconfig.dropDb) {
         db.dropDatabase(function(err, res) {
           if(err) return reject(err)
           logger.silly("dropped database")
+          connected = true
           resolve(db)
         })
       }
@@ -34,6 +35,7 @@ lib.connect = function(dbconf) {
 }
 
 lib.disconnect = function() {
+  connected = false
   db && db.close()
   logger.silly("disconnected")
   return Promise.resolve()
@@ -42,6 +44,8 @@ lib.disconnect = function() {
 lib.save = function(list) {
 
   logger.silly("save %s items", list.length)
+
+  if(!connected) return Promise.resolve()
 
   var batches = {}
   list.forEach(function(record) {
@@ -71,6 +75,9 @@ lib.save = function(list) {
     })
     .each(function(batch) {
       return new Promise(function(resolve, reject) {
+
+        if(!connected) return Promise.resolve()
+
         batch.execute(function(err, result) {
           if(err) return reject(err)
           resolve(result)
