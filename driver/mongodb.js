@@ -1,15 +1,14 @@
 var lib = module.exports
 
 var Promise = require('bluebird')
+var logger = require('../lib/logger').getLogger('driver.mongodb')
 
-var dbconf = {
-  host: "192.168.77.10",
-  port: 27017,
-  dbname: 'osm',
-}
+var dbconfig
 
 var db
-var connect = function() {
+lib.connect = function(dbconf) {
+  dbconfig = dbconf
+  logger.silly("connecting")
   return new Promise(function(resolve, reject) {
     if(db) return resolve(db)
     var MongoClient = require('mongodb').MongoClient
@@ -19,39 +18,67 @@ var connect = function() {
     MongoClient.connect(url, function(err, dbconn) {
       if(err) return reject(err)
       db = dbconn
-      console.log("mongo connected");
-      resolve(db)
+      logger.silly("connected")      
+      if(dbconfig.dropDb) {
+        db.dropDatabase(function(err, res) {
+          if(err) return reject(err)
+          logger.silly("dropped database")
+          resolve(db)
+        })
+      }
+      else {
+        resolve(db)
+      }
     })
   })
 }
 
-connect()
+lib.disconnect = function() {
+  db && db.close()
+  logger.silly("disconnected")
+  return Promise.resolve()
+}
 
 lib.save = function(list) {
-  return connect().then(function(db) {
 
-    var batches = {}
-    list.forEach(function(record) {
+  logger.silly("save %s items", list.length)
 
-      if(!batches[record.type]) {
-        var col = db.collection(record.type)
-        batches[record.type] = col.initializeUnorderedBulkOp({useLegacyOps: true});
-      }
+  var batches = {}
+  list.forEach(function(record) {
 
-      batches[record.type].insert(record.toJSON())
+    if(!batches[record.type]) {
+      var col = db.collection(record.type)
+      batches[record.type] = col.initializeUnorderedBulkOp({useLegacyOps: true});
+    }
+
+    var json = record.toJSON()
+    logger.silly("Save record %s", record.id)
+    if(dbconfig.upsert) {
+      batches[record.type]
+        .find({ id: json.id })
+        .upsert()
+        .updateOne({ $set: json });
+    }
+    else {
+      batches[record.type]
+        .insert(json);
+    }
+  })
+
+  return Promise.all(Object.keys(batches))
+    .map(function(type) {
+      return batches[type]
     })
-
-    return Promise.all(Object.keys(batches))
-      .map(function(type) {
-        return batches[type]
-      })
-      .each(function(batch) {
-        return new Promise(function(resolve, reject) {
-          batch.execute(function(err, result) {
-            if(err) return reject(err)
-            resolve(result)
-          })
+    .each(function(batch) {
+      return new Promise(function(resolve, reject) {
+        batch.execute(function(err, result) {
+          if(err) return reject(err)
+          resolve(result)
         })
       })
-  })
+    })
+    .then(function() {
+      logger.silly("batch saved")
+      return Promise.resolve()
+    })
 }

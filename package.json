@@ -10,6 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "mongodb": "^2.0.48",
-    "node-expat": "^2.3.11"
+    "node-expat": "^2.3.11",
+    "winston": "^2.1.0",
+    "winston-annotate": "^0.1.0"
   }
 }
